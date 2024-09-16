@@ -25,14 +25,18 @@ public class DipendenteService {
     @Autowired
     private Cloudinary cloudinaryUploader;
 
-    public Page<Dipendente> findAll(int page, int size, String sortBy){
-        if(page > 100) page = 100;
+    public Page<Dipendente> findAll(int page, int size, String sortBy) {
+        if (page > 100) page = 100;
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return this.dipendenteRepository.findAll(pageable);
     }
 
-    public Dipendente save(DipendenteDTO dipendenteDTO){
+    public Dipendente findByEmail(String email) {
+        return dipendenteRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("Il dipendente con l'email " + email + " non è stato trovato!"));
+    }
+
+    public Dipendente save(DipendenteDTO dipendenteDTO) {
         // 1. Verifico che l'email non sia già stata utilizzata
         this.dipendenteRepository.findByEmail(dipendenteDTO.email()).ifPresent(
                 // 1.1 Se lo è triggero un errore (400 Bad Request)
@@ -42,16 +46,17 @@ public class DipendenteService {
         );
 
         // 2. Se tutto è ok procedo con l'aggiungere campi 'server-generated' (nel nostro caso avatarURL)
-        Dipendente newDipendente = new Dipendente(dipendenteDTO.nome(), dipendenteDTO.cognome(),dipendenteDTO.username(), dipendenteDTO.email(),"https://ui-avatars.com/api/?name="+dipendenteDTO.nome()+"+"+dipendenteDTO.cognome());
+        Dipendente newDipendente = new Dipendente(dipendenteDTO.nome(), dipendenteDTO.cognome(), dipendenteDTO.username(), dipendenteDTO.email(), "https://ui-avatars.com/api/?name=" + dipendenteDTO.nome() + "+" + dipendenteDTO.cognome());
 
         // 3. Salvo lo User
         return this.dipendenteRepository.save(newDipendente);
     }
-    public Dipendente findById(UUID dipendenteId){
+
+    public Dipendente findById(UUID dipendenteId) {
         return this.dipendenteRepository.findById(dipendenteId).orElseThrow(() -> new NotFoundException(dipendenteId));
     }
 
-    public Dipendente findByIdAndUpdate(UUID dipendenteId, DipendenteDTO updatedDipendenteDTO){
+    public Dipendente findByIdAndUpdate(UUID dipendenteId, DipendenteDTO updatedDipendenteDTO) {
         // 1. Controllo se l'email nuova è già in uso
         this.dipendenteRepository.findByEmail(updatedDipendenteDTO.email()).ifPresent(
                 // 1.1 Se lo è triggero un errore (400 Bad Request)
@@ -64,16 +69,16 @@ public class DipendenteService {
         found.setCognome(updatedDipendenteDTO.cognome());
         found.setEmail(updatedDipendenteDTO.email());
         found.setUsername(updatedDipendenteDTO.username());
-        found.setAvatar("https://ui-avatars.com/api/?name="+updatedDipendenteDTO.nome()+"+"+updatedDipendenteDTO.cognome());
+        found.setAvatar("https://ui-avatars.com/api/?name=" + updatedDipendenteDTO.nome() + "+" + updatedDipendenteDTO.cognome());
         return this.dipendenteRepository.save(found);
     }
 
-    public void findByIdAndDelete(UUID dipendenteId){
+    public void findByIdAndDelete(UUID dipendenteId) {
         Dipendente found = this.findById(dipendenteId);
         this.dipendenteRepository.delete(found);
     }
 
-    public Dipendente uploadImage(MultipartFile file , UUID dipendenteId) throws IOException {
+    public Dipendente uploadImage(MultipartFile file, UUID dipendenteId) throws IOException {
         Dipendente dipendente = findById(dipendenteId);
         String url = (String) cloudinaryUploader.uploader().upload(file.getBytes(), ObjectUtils.emptyMap()).get("url");
         System.out.println("URL: " + url);
