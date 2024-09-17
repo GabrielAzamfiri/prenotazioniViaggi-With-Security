@@ -1,6 +1,7 @@
 package com.example.prenotazioniViaggi.exceptions;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -30,6 +31,12 @@ public class ExceptionsHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED) // 401
     public ErrorPayload handleUnauthorized(UnauthorizedException ex) {
         return new ErrorPayload(ex.getMessage(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN) // 403
+    public ErrorPayload handleForbidden(AuthorizationDeniedException ex) {
+        return new ErrorPayload("Non hai i permessi per accedere", LocalDateTime.now());
     }
 
     @ExceptionHandler(Exception.class)

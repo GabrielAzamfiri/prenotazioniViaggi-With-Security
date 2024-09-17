@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +25,9 @@ public class DipendenteService {
     private DipendenteRepository dipendenteRepository;
     @Autowired
     private Cloudinary cloudinaryUploader;
+
+    @Autowired
+    private PasswordEncoder bcrypt;
 
     public Page<Dipendente> findAll(int page, int size, String sortBy) {
         if (page > 100) page = 100;
@@ -46,7 +50,7 @@ public class DipendenteService {
         );
 
         // 2. Se tutto è ok procedo con l'aggiungere campi 'server-generated' (nel nostro caso avatarURL)
-        Dipendente newDipendente = new Dipendente(dipendenteDTO.nome(), dipendenteDTO.cognome(), dipendenteDTO.username(), dipendenteDTO.email(), "https://ui-avatars.com/api/?name=" + dipendenteDTO.nome() + "+" + dipendenteDTO.cognome());
+        Dipendente newDipendente = new Dipendente(dipendenteDTO.nome(), dipendenteDTO.cognome(), dipendenteDTO.username(), dipendenteDTO.email(), bcrypt.encode(dipendenteDTO.password()), "https://ui-avatars.com/api/?name=" + dipendenteDTO.nome() + "+" + dipendenteDTO.cognome());
 
         // 3. Salvo lo User
         return this.dipendenteRepository.save(newDipendente);
@@ -68,6 +72,7 @@ public class DipendenteService {
         found.setNome(updatedDipendenteDTO.nome());
         found.setCognome(updatedDipendenteDTO.cognome());
         found.setEmail(updatedDipendenteDTO.email());
+        found.setPassword(updatedDipendenteDTO.password());
         found.setUsername(updatedDipendenteDTO.username());
         found.setAvatar("https://ui-avatars.com/api/?name=" + updatedDipendenteDTO.nome() + "+" + updatedDipendenteDTO.cognome());
         return this.dipendenteRepository.save(found);

@@ -1,22 +1,30 @@
 package com.example.prenotazioniViaggi.security;
 
+import com.example.prenotazioniViaggi.entities.Dipendente;
 import com.example.prenotazioniViaggi.exceptions.UnauthorizedException;
+import com.example.prenotazioniViaggi.services.DipendenteService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 public class JWTCheckFilter extends OncePerRequestFilter {
     @Autowired
     private JWTTools jwtTools;
 
+    @Autowired
+    private DipendenteService dipendenteService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -37,10 +45,25 @@ public class JWTCheckFilter extends OncePerRequestFilter {
         jwtTools.verifyToken(accessToken);
 
         // 4. Se è tutto ok andiamo avanti (il che potrebbe voler dire o andare al prossimo filtro oppure al controller)
+        // Se voglio abilitare l'AUTORIZZAZIONE devo 'informare' Spring Security su chi sia l'utente che sta effettuando la richiesta, in modo
+        // tale che possa controllarne il ruolo
+
+        // 4.1 Cerco l'utente tramite id (l'id sta nel token)
+        String id = jwtTools.extractIdFromToken(accessToken);
+        Dipendente currentUser = this.dipendenteService.findById(UUID.fromString(id));
+
+        // 4.2 Trovato l'utente posso associarlo al Security Context, praticamente è come associare l'utente autenticato alla richiesta corrente
+        Authentication authentication = new UsernamePasswordAuthenticationToken(currentUser, null, currentUser.getAuthorities());
+        // Il terzo parametro è quello che ci serve per poter utilizzare i vari @PreAuthorize perché esso ritorna la lista dei ruoli dell'utente corrente
+        // e quindi Spring Security potrà effettuare un controllo sui ruoli quando ha bisogno
+        SecurityContextHolder.getContext().setAuthentication(authentication); // <-- Associo l'utente autenticato (Autentication) al Context
+
+        // 4.3 Andiamo avanti
         filterChain.doFilter(request, response);
 
         // 5. Se il token non è ok --> 401
     }
+
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {

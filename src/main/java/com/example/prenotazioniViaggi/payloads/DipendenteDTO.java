@@ -19,6 +19,11 @@ public record DipendenteDTO(
 
         @NotEmpty(message = "L'email è obbligatoria")
         @Email(message = "L'email inserita non è valida")
-        String email
-) {
+        String email,
+
+        @NotEmpty(message = "La password è obbligatoria")
+        @Size(min = 4, message = "La password deve avere almeno 4 caratteri")
+        //  @Pattern() Permette di inserire una Regular Expression per validare praticamente qualsiasi cosa (es. PW fatte in una certa maniera)
+        String password) {
+
 }
