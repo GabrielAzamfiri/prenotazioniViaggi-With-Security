@@ -31,10 +31,10 @@ public class AuthController {
         return new UserLoginRespDTO(this.authService.checkCredentialsAndGenerateToken(payload));
     }
 
-   
+
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED) // Serve per customizzare lo status code (CREATED --> 201)
-    private NewDipendenteResp createAuthor(@RequestBody @Validated DipendenteDTO dipendenteDTO, BindingResult validationResult) {
+    public NewDipendenteResp createAuthor(@RequestBody @Validated DipendenteDTO dipendenteDTO, BindingResult validationResult) {
         // @Validated serve per 'attivare' le regole di validazione descritte nel DTO
         // BindingResult mi permette di capire se ci sono stati errori e quali errori ci sono stati
         if (validationResult.hasErrors()) {

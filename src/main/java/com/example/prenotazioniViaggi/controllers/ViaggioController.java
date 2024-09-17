@@ -26,20 +26,21 @@ public class ViaggioController {
     // Per contattare questo endpoint dovrò mandare una richiesta GET a http://localhost:3001/authors
     public Page<Viaggio> getAll(@RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "10") int size,
-                                @RequestParam(defaultValue = "id") String sortBy){
+                                @RequestParam(defaultValue = "id") String sortBy) {
         return this.viaggioService.findAll(page, size, sortBy);
     }
+
     @GetMapping("/{viaggioId}")
-    private Viaggio getById(@PathVariable UUID viaggioId){
+    public Viaggio getById(@PathVariable UUID viaggioId) {
         return viaggioService.findById(viaggioId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // Serve per customizzare lo status code (CREATED --> 201)
-    private Viaggio createAuthor(@RequestBody @Validated ViaggioDTO viaggioDTO, BindingResult validationResult){
+    public Viaggio createAuthor(@RequestBody @Validated ViaggioDTO viaggioDTO, BindingResult validationResult) {
         // @Validated serve per 'attivare' le regole di validazione descritte nel DTO
         // BindingResult mi permette di capire se ci sono stati errori e quali errori ci sono stati
-        if(validationResult.hasErrors())  {
+        if (validationResult.hasErrors()) {
             // Se ci sono stati errori lanciamo un'eccezione custom
             String messages = validationResult.getAllErrors().stream()
                     .map(objectError -> objectError.getDefaultMessage())
@@ -52,18 +53,20 @@ public class ViaggioController {
         }
 
     }
+
     @PutMapping("/{viaggioId}")
-    private Viaggio findByIdAndUpdate(@PathVariable UUID  viaggioId, @RequestBody @Validated ViaggioDTO updatedViaggioDTO){
-        return viaggioService.findByIdAndUpdate(viaggioId,updatedViaggioDTO);
+    public Viaggio findByIdAndUpdate(@PathVariable UUID viaggioId, @RequestBody @Validated ViaggioDTO updatedViaggioDTO) {
+        return viaggioService.findByIdAndUpdate(viaggioId, updatedViaggioDTO);
     }
 
     @DeleteMapping("/{viaggioId}")
     @ResponseStatus(HttpStatus.NO_CONTENT) // Serve per customizzare lo status code (NO_CONTENT --> 204)
-    private void findByIdAndDelete(@PathVariable UUID  viaggioId){
+    private void findByIdAndDelete(@PathVariable UUID viaggioId) {
         viaggioService.findByIdAndDelete(viaggioId);
     }
+
     @PatchMapping("/{viaggioId}/stato")
-    private Viaggio findByStato(@PathVariable UUID viaggioId ,@RequestBody @Validated StatoViaggioDTO statoViaggioDTO){
+    public Viaggio findByStato(@PathVariable UUID viaggioId, @RequestBody @Validated StatoViaggioDTO statoViaggioDTO) {
         return viaggioService.findByIdAndUpdateStato(viaggioId, statoViaggioDTO);
     }
 }

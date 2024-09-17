@@ -1,6 +1,7 @@
 package com.example.prenotazioniViaggi.controllers;
 
 
+import com.example.prenotazioniViaggi.entities.Dipendente;
 import com.example.prenotazioniViaggi.entities.Prenotazione;
 import com.example.prenotazioniViaggi.exceptions.BadRequestException;
 import com.example.prenotazioniViaggi.payloads.PrenotazioneDTO;
@@ -8,6 +9,8 @@ import com.example.prenotazioniViaggi.services.PrenotazioneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -25,20 +28,21 @@ public class PrenotazioneController {
     // Per contattare questo endpoint dovrò mandare una richiesta GET a http://localhost:3001/authors
     public Page<Prenotazione> getAll(@RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "10") int size,
-                                     @RequestParam(defaultValue = "id") String sortBy){
+                                     @RequestParam(defaultValue = "id") String sortBy) {
         return this.prenotazioneService.findAll(page, size, sortBy);
     }
+
     @GetMapping("/{prenotazioneId}")
-    private Prenotazione getById(@PathVariable UUID prenotazioneId){
+    public Prenotazione getById(@PathVariable UUID prenotazioneId) {
         return prenotazioneService.findById(prenotazioneId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // Serve per customizzare lo status code (CREATED --> 201)
-    private Prenotazione createAuthor(@RequestBody @Validated PrenotazioneDTO prenotazioneDTO, BindingResult validationResult){
+    public Prenotazione createAuthor(@RequestBody @Validated PrenotazioneDTO prenotazioneDTO, BindingResult validationResult) {
         // @Validated serve per 'attivare' le regole di validazione descritte nel DTO
         // BindingResult mi permette di capire se ci sono stati errori e quali errori ci sono stati
-        if(validationResult.hasErrors())  {
+        if (validationResult.hasErrors()) {
             // Se ci sono stati errori lanciamo un'eccezione custom
             String messages = validationResult.getAllErrors().stream()
                     .map(objectError -> objectError.getDefaultMessage())
@@ -51,17 +55,29 @@ public class PrenotazioneController {
         }
     }
 
+    @PutMapping("/me")
+    public Prenotazione findMyPrenotazioneAndUpdate(@AuthenticationPrincipal Dipendente currentAuthenticatedUser, @RequestBody @Validated PrenotazioneDTO updatedPrenotazioneDTO) {
+        return prenotazioneService.findByIdAndUpdate(currentAuthenticatedUser.getId(), updatedPrenotazioneDTO);
+    }
+
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT) // Serve per customizzare lo status code (NO_CONTENT --> 204)
+    public void findMyPrenotazioneAndDelete(@AuthenticationPrincipal Dipendente currentAuthenticatedUser) {
+        prenotazioneService.findByIdAndDelete(currentAuthenticatedUser.getId());
+    }
+
     @PutMapping("/{prenotazioneId}")
-    private Prenotazione findByIdAndUpdate(@PathVariable UUID  prenotazioneId, @RequestBody @Validated PrenotazioneDTO updatedPrenotazioneDTO){
-        return prenotazioneService.findByIdAndUpdate(prenotazioneId,updatedPrenotazioneDTO);
+    @PreAuthorize("hasAuthority('ADMIN')")  // Solo gli admin possono modificare altri utenti
+    public Prenotazione findByIdAndUpdate(@PathVariable UUID prenotazioneId, @RequestBody @Validated PrenotazioneDTO updatedPrenotazioneDTO) {
+        return prenotazioneService.findByIdAndUpdate(prenotazioneId, updatedPrenotazioneDTO);
     }
 
     @DeleteMapping("/{prenotazioneId}")
+    @PreAuthorize("hasAuthority('ADMIN')")  // Solo gli admin possono modificare altri utenti
     @ResponseStatus(HttpStatus.NO_CONTENT) // Serve per customizzare lo status code (NO_CONTENT --> 204)
-    private void findByIdAndDelete(@PathVariable UUID  prenotazioneId){
+    public void findByIdAndDelete(@PathVariable UUID prenotazioneId) {
         prenotazioneService.findByIdAndDelete(prenotazioneId);
     }
-
 
 
 }

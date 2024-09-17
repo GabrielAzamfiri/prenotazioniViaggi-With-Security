@@ -46,28 +46,28 @@ public class DipentendeController {
         this.dipendenteService.findByIdAndDelete(currentAuthenticatedUser.getId());
     }
 
-//    @DeleteMapping("/me/avatar")
-//    public void uploadProfileAvatar(@AuthenticationPrincipal Dipendente currentAuthenticatedUser,
-//                                    @RequestParam("avatar") MultipartFile image) throws IOException {
-//        this.dipendenteService.uploadImage(image, currentAuthenticatedUser.getId());
-//    }
+    @PostMapping("/me/avatar")
+    public void uploadProfileAvatar(@AuthenticationPrincipal Dipendente currentAuthenticatedUser,
+                                    @RequestParam("avatar") MultipartFile image) throws IOException {
+        this.dipendenteService.uploadImage(image, currentAuthenticatedUser.getId());
+    }
 
     @GetMapping("/{dipendenteId}")// Tutti gli utenti possono leggere il profilo di un altro utente
-    private Dipendente getById(@PathVariable UUID dipendenteId) {
+    public Dipendente getById(@PathVariable UUID dipendenteId) {
         return dipendenteService.findById(dipendenteId);
     }
 
 
     @PutMapping("/{dipendenteId}")
     @PreAuthorize("hasAuthority('ADMIN')")  // Solo gli admin possono modificare altri utenti
-    private Dipendente findByIdAndUpdate(@PathVariable UUID dipendenteId, @RequestBody @Validated DipendenteDTO updatedDipendenteDTO) {
+    public Dipendente findByIdAndUpdate(@PathVariable UUID dipendenteId, @RequestBody @Validated DipendenteDTO updatedDipendenteDTO) {
         return dipendenteService.findByIdAndUpdate(dipendenteId, updatedDipendenteDTO);
     }
 
     @DeleteMapping("/{dipendenteId}")
     @PreAuthorize("hasAuthority('ADMIN')") // Solo gli admin possono modificare altri utenti
     @ResponseStatus(HttpStatus.NO_CONTENT) // Serve per customizzare lo status code (NO_CONTENT --> 204)
-    private void findByIdAndDelete(@PathVariable UUID dipendenteId) {
+    public void findByIdAndDelete(@PathVariable UUID dipendenteId) {
         dipendenteService.findByIdAndDelete(dipendenteId);
     }
 
